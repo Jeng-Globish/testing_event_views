@@ -21,9 +21,9 @@ frappe.views.calendar["Event"] = {
 		label: __("Public"),
 	},
 	],
-	// options: {
-	// 	slotDuration: "00:30:00",
-	// 	displayEventEnd: true,
-	// },
+	options: {
+		slotDuration: "00:30:00",
+		displayEventEnd: true,
+	},
 	get_events_method: "frappe.desk.doctype.event.event.get_events",
 };

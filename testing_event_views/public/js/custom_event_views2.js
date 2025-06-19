@@ -1,3 +1,4 @@
+// Default Calendar View
 frappe.views.calendar["Event"] = {
 	field_map: {
 		start: "starts_on",

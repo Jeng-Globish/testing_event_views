@@ -40,13 +40,13 @@ app_license = "mit"
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
-# page_js = {"page" : "public/js/file.js"}
+# page_js = {"Event" : "public/js/custom_calendar_2.js"}
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
-doctype_calendar_js = {"Event" : "public/js/custom_event_views2.js"}
+doctype_calendar_js = {"Event" : "public/js/custom_calendar_2.js"}
 
 # Svg Icons
 # ------------------

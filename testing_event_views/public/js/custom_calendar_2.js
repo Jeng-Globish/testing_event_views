@@ -330,7 +330,7 @@ frappe.views.Calendar = class Calendar {
             //     frappe.FullCalendar.TimeGrid,
             //     frappe.FullCalendar.Interaction
             // ],
-            plugins: frappe.FullCalendar.Plugins, // Keep this as primary attempt
+            // plugins: frappe.FullCalendar.Plugins, // Keep this as primary attempt
             initialView: defaults.initialView || "dayGridMonth",
             locale: frappe.boot.lang,
             firstDay: 1,

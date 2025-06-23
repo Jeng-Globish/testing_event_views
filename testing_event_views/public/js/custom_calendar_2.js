@@ -47,18 +47,32 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
         });
     }
 
+    // --- FIX START: Reintroduce required_libs to tell Frappe to load FullCalendar ---
+    get required_libs() {
+        // These are the exact paths you observed loading in the unmodified version.
+        return [
+            "assets/frappe/js/lib/fullcalendar/fullcalendar.min.js",
+            "assets/frappe/js/lib/fullcalendar/fullcalendar.min.css"
+        ];
+    }
+    // --- FIX END ---
+
     render() {
         if (this.calendar) {
             this.calendar.refresh();
             return;
         }
 
-        // Removed 'this.load_lib' as 'required_libs' is no longer specified.
-        // Assuming FullCalendar is already loaded by Frappe core.
-        this.get_calendar_preferences()
-            .then((options) => {
-                this.calendar = new frappe.views.Calendar(options);
-            });
+        // --- FIX START: Ensure libraries are loaded before initializing Calendar ---
+        // `frappe.require` will load the libraries specified in `required_libs`
+        // and then execute the callback function once they are loaded.
+        frappe.require(this.required_libs, () => {
+            this.get_calendar_preferences()
+                .then((options) => {
+                    this.calendar = new frappe.views.Calendar(options);
+                });
+        });
+        // --- FIX END ---
     }
 
     get_calendar_preferences() {
@@ -72,22 +86,16 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
 
         return new Promise((resolve) => {
             if (calendar_name === "default") {
-                // --- Start of FIX: Ensure default FullCalendar options are always present ---
-                // This block is crucial for the default calendar view to work,
-                // providing fallback values for FullCalendar properties that
-                // would otherwise be undefined when no custom Calendar View is selected.
                 const defaultDocTypeCalendarSettings = frappe.views.calendar[this.doctype] || {};
 
-                // Define a fallback for essential field_map if not provided by the DocType itself
                 const defaultFieldMap = {
                     id: "name",
-                    start: "start_date", // Common default for start date field
-                    end: "end_date",     // Common default for end date field
-                    title: "subject",    // Common default for title field
-                    allDay: "all_day",   // Common default for allDay field
+                    start: "start_date",
+                    end: "end_date",
+                    title: "subject",
+                    allDay: "all_day",
                 };
 
-                // Define default values for FullCalendar specific time-slot options
                 const defaultFullCalendarOptions = {
                     slotEventOverlap: true,
                     scrollTimeReset: true,
@@ -95,20 +103,14 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
                     slotLabelInterval: "01:00:00",
                     slotMinTime: "06:00:00",
                     slotMaxTime: "24:00:00",
-                    enableDynamicScrollTime: false, // Default to not dynamically scroll
+                    enableDynamicScrollTime: false,
                 };
 
-                // Merge the existing DocType calendar settings with the fallback field map
-                // and the default FullCalendar options, and assign them to the options object.
                 Object.assign(options, {
                     field_map: defaultDocTypeCalendarSettings.field_map || defaultFieldMap,
-                    ...defaultFullCalendarOptions, // Add the FullCalendar default options here
-                    // You can add other global FullCalendar defaults here if needed,
-                    // or ensure they are properly inherited from defaultDocTypeCalendarSettings
-                    // Example: defaultView: defaultDocTypeCalendarSettings.defaultView || "dayGridMonth",
-                }, defaultDocTypeCalendarSettings); // Also merge any other top-level settings
+                    ...defaultFullCalendarOptions,
+                }, defaultDocTypeCalendarSettings);
 
-                // --- End of FIX ---
                 resolve(options);
             } else {
                 frappe.model.with_doc("Calendar View", calendar_name, () => {
@@ -123,37 +125,24 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
                         return;
                     }
 
-                    // --- Start of Field Fetching and Conversion (for custom views) ---
-                    // These fields are specific to custom Calendar View DocTypes
-                    
-                    // custom_sloteventoverlap (Check field)
                     let customSlotEventOverlapValue = false;
                     if (cint(doc.custom_sloteventoverlap) === 1) {
                         customSlotEventOverlapValue = true;
                     }
-                    
-                    // scrollTimeReset (Check field)
-                    let scrollTimeResetValue = false; // Default: false
+
+                    let scrollTimeResetValue = false;
                     if (cint(doc.custom_scrolltimereset) === 1) {
                         scrollTimeResetValue = true;
                     }
 
-                    // custom_scrolltime (NEW Check field for controlling auto-scroll)
-                    let enableDynamicScrollTime = false; // Default: false (do not auto-scroll dynamically)
+                    let enableDynamicScrollTime = false;
                     if (cint(doc.custom_scrolltime) === 1) {
                         enableDynamicScrollTime = true;
                     }
 
-                    // slotDuration (Data field)
                     let slotDurationValue = doc.custom_slotduration || "00:10:00";
-
-                    // slotLabelInterval (Data field)
                     let slotLabelIntervalValue = doc.custom_slotlabelinterval || "00:30:00";
-
-                    // slotMinTime (Data/Time field)
                     let slotMinTimeValue = doc.custom_slotmintime || "06:00:00";
-
-                    // slotMaxTime (Data/Time field)
                     let slotMaxTimeValue = doc.custom_slotmaxtime || "24:00:00";
 
                     Object.assign(options, {
@@ -164,30 +153,24 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
                             title: doc.subject_field,
                             allDay: doc.all_day ? 1 : 0,
                         },
-                        // Assign all FullCalendar options coming from the Calendar View DocType
                         slotEventOverlap: customSlotEventOverlapValue,
                         scrollTimeReset: scrollTimeResetValue,
                         slotDuration: slotDurationValue,
                         slotLabelInterval: slotLabelIntervalValue,
                         slotMinTime: slotMinTimeValue,
                         slotMaxTime: slotMaxTimeValue,
-                        enableDynamicScrollTime: enableDynamicScrollTime, // Pass this new option
+                        enableDynamicScrollTime: enableDynamicScrollTime,
                     });
                     resolve(options);
                 });
             }
         });
     }
-
-    // REMOVED: The 'get required_libs()' method that was causing the 404 error.
-    // FullCalendar is expected to be loaded by Frappe's core.
 };
 
 frappe.views.Calendar = class Calendar {
     constructor(options) {
         $.extend(this, options);
-
-        // console.log("Calendar options received:", options); // Re-added for debugging
 
         this.field_map = this.field_map || {
             id: "name",
@@ -224,7 +207,6 @@ frappe.views.Calendar = class Calendar {
     make_page() {
         var me = this;
 
-        // add links to other calendars
         me.page.clear_user_actions();
         $.each(frappe.boot.calendars, function (i, doctype) {
             if (frappe.model.can_read(doctype)) {
@@ -290,16 +272,13 @@ frappe.views.Calendar = class Calendar {
             ".fc-dayGridMonth-button, .fc-dayGridWeek-button, .fc-dayGridDay-button, .fc-today-button";
         const fcViewButtonClasses = "fc-button fc-button-primary fc-button-active";
 
-        // remove fc-button styles
         this.$wrapper
             .find("button.fc-button")
             .removeClass(fcViewButtonClasses)
             .addClass("btn btn-default");
 
-        // group all view buttons
         this.$wrapper.find(viewButtons).wrapAll('<div class="btn-group" />');
 
-        // add icons
         this.$wrapper
             .find(`.fc-prev-button span`)
             .attr("class", "")
@@ -311,8 +290,6 @@ frappe.views.Calendar = class Calendar {
         if (this.$wrapper.find(".fc-today-button svg").length == 0)
             this.$wrapper.find(".fc-today-button").prepend(frappe.utils.icon("today"));
 
-        // v6.x of fc has weird behaviour which removes all the custom classes
-        // on header buttons on click, event below re-adds all the classes
         var btn_group = this.$wrapper.find(".fc-button-group");
         btn_group.find(".fc-button-active").addClass("active");
 
@@ -333,10 +310,8 @@ frappe.views.Calendar = class Calendar {
         var me = this;
         defaults.meridiem = "false";
 
-        // Calculate current time minus 30 minutes
         const now = new Date();
         now.setMinutes(now.getMinutes() - 30);
-        // FIX: Manually format to HH:mm:ss (24-hour)
         let hours = now.getHours();
         let minutes = now.getMinutes();
         let seconds = now.getSeconds();
@@ -345,50 +320,46 @@ frappe.views.Calendar = class Calendar {
         seconds = String(seconds).padStart(2, '0');
         const calculatedScrollTime = `${hours}:${minutes}:${seconds}`;
 
-        // console.log("Calculated scrollTime:", calculatedScrollTime); // Re-added for debugging
-
         this.cal_options = {
-            plugins: frappe.FullCalendar.Plugins,
+            // FIX: This line now relies on frappe.FullCalendar being loaded,
+            // which will happen because of `required_libs` in CalendarView.
+            // If `frappe.FullCalendar.Plugins` is still undefined *after* the library loads,
+            // you might need to manually list them as:
+            // plugins: [
+            //     frappe.FullCalendar.DayGrid,
+            //     frappe.FullCalendar.TimeGrid,
+            //     frappe.FullCalendar.Interaction
+            // ],
+            plugins: frappe.FullCalendar.Plugins, // Keep this as primary attempt
             initialView: defaults.initialView || "dayGridMonth",
             locale: frappe.boot.lang,
             firstDay: 1,
             headerToolbar: {
                 left: "prev,title,next",
                 center: "",
-                right: "today,dayGridMonth,timeGridWeek,timeGridDay", // Using timeGrid views here
+                right: "today,dayGridMonth,timeGridWeek,timeGridDay",
             },
             editable: true,
             droppable: true,
             selectable: true,
             selectMirror: true,
             forceEventDuration: true,
-            
-            // --- Crucial FullCalendar Display Options (put back to ensure they are true) ---
-            displayEventTime: true, 
-            displayEventEnd: true,  
-            // --- End Crucial Options ---
+
+            displayEventTime: true,
+            displayEventEnd: true,
 
             weekends: defaults.weekends,
             nowIndicator: true,
             themeSystem: null,
 
-            // --- FullCalendar Options (dynamically set from Calendar View DocType) ---
-            // These properties are set on the `this` context via $.extend in the constructor,
-            // which gets its options from `get_calendar_preferences`.
-            // The default values are now provided in `get_calendar_preferences` for the "default" case.
             slotEventOverlap: this.slotEventOverlap,
             scrollTimeReset: this.scrollTimeReset,
             slotDuration: this.slotDuration,
             slotLabelInterval: this.slotLabelInterval,
             slotMinTime: this.slotMinTime,
             slotMaxTime: this.slotMaxTime,
-            // --- End FullCalendar Options ---
 
-            // --- Conditional scrollTime based on custom_scrolltime check field ---
-            // This now correctly uses the `this.slotMinTime` which will be populated
-            // either by a custom doc or the new default values.
             scrollTime: this.enableDynamicScrollTime ? calculatedScrollTime : (this.slotMinTime || "06:00:00"),
-            // --- End Conditional scrollTime ---
 
             buttonText: {
                 today: __("Today"),
@@ -404,15 +375,13 @@ frappe.views.Calendar = class Calendar {
                     callback: function (r) {
                         var events = r.message || [];
                         events = me.prepare_events(events);
-
-                        // --- NEW DIAGNOSTIC LOG FOR EVENT DATA (kept for debugging event data if needed) ---
                         console.groupCollapsed("Prepared Events Data for FullCalendar");
                         if (events && events.length > 0) {
                             events.forEach((event, index) => {
                                 console.log(`Event ${event.id || index + 1}:`, {
                                     start: event.start,
                                     end: event.end,
-                                    allDay: event.allDay, // This MUST be false/0 for times to show
+                                    allDay: event.allDay,
                                     title: event.title,
                                 });
                             });
@@ -420,14 +389,11 @@ frappe.views.Calendar = class Calendar {
                             console.log("No events fetched or prepared for display.");
                         }
                         console.groupEnd();
-                        // --- END DIAGNOSTIC LOG ---
-
                         successCallback(events);
                     },
                 });
             },
             eventClick: function (info) {
-                // edit event description or delete
                 var doctype = info.doctype || me.doctype;
                 if (frappe.model.can_read(doctype)) {
                     frappe.set_route("Form", doctype, info.event.id);
@@ -444,7 +410,6 @@ frappe.views.Calendar = class Calendar {
                 const allDay = seconds === 86400000;
 
                 if (info.view.type === "dayGridMonth" && allDay) {
-                    // detect single day click in month view
                     return;
                 }
 
@@ -455,10 +420,8 @@ frappe.views.Calendar = class Calendar {
 
                 if (seconds >= 86400000) {
                     if (allDay) {
-                        // all-day click
                         event[me.field_map.allDay] = 1;
                     }
-                    // incase of all day or multiple day events -1 sec
                     event[me.field_map.end] = me.get_system_datetime(info.end - 1);
                 }
                 frappe.set_route("Form", me.doctype, event.name);
@@ -473,7 +436,6 @@ frappe.views.Calendar = class Calendar {
                         me.fullCalendar.changeView("timeGridDay", info.date);
                         me.$wrapper.find(".date-clicked").removeClass("date-clicked");
 
-                        // update "active view" btn
                         me.$wrapper.find(".fc-month-button").removeClass("active");
                         me.$wrapper.find(".fc-agendaDay-button").addClass("active");
                     }
@@ -481,8 +443,6 @@ frappe.views.Calendar = class Calendar {
                     me.$wrapper.find(".date-clicked").removeClass("date-clicked");
                     $date_cell.addClass("date-clicked");
 
-                    // explicitly remove the fc primary button styling that is append on view change
-                    // from month -> day
                     $("#fc-calendar-wrapper")
                         .find("button.fc-button")
                         .removeClass("fc-button fc-button-primary fc-button-active")
@@ -517,7 +477,6 @@ frappe.views.Calendar = class Calendar {
             d.id = d.name;
             d.editable = frappe.model.can_write(d.doctype || me.doctype);
 
-            // do not allow submitted/cancelled events to be moved / extended
             if (d.docstatus && d.docstatus > 0) {
                 d.editable = false;
             }
@@ -526,25 +485,17 @@ frappe.views.Calendar = class Calendar {
                 d[target] = d[source];
             });
 
-            // console.log("Event after field_map application:", d); // Re-added for debugging
-            // console.log("Field map used for event:", me.field_map); // Re-added for debugging
-
             if (typeof d.allDay === "undefined") {
                 d.allDay = me.field_map.allDay;
             }
 
             if (!me.field_map.convertToUserTz) d.convertToUserTz = 1;
 
-            // convert to user tz
             if (d.convertToUserTz) {
                 d.start = frappe.datetime.convert_to_user_tz(d.start);
                 d.end = frappe.datetime.convert_to_user_tz(d.end);
             }
 
-            // Check state AFTER timezone conversion
-            // console.log("Event after timezone conversion:", d); // Re-added for debugging
-
-            // show event on single day if start or end date is invalid
             if (!frappe.datetime.validate(d.start) && d.end) {
                 d.start = frappe.datetime.add_days(d.end, -1);
             }
@@ -552,7 +503,7 @@ frappe.views.Calendar = class Calendar {
             if (d.start && !frappe.datetime.validate(d.end)) {
                 d.end = frappe.datetime.add_days(d.start, 1);
             }
-            
+
             me.prepare_colors(d);
 
             d.title = frappe.utils.html2text(d.title);

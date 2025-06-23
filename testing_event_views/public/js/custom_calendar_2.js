@@ -310,145 +310,145 @@ frappe.views.Calendar = class Calendar {
 
         // console.log removed from here
 
-        this.cal_options = {
-            plugins: frappe.FullCalendar.Plugins,
-            initialView: defaults.initialView || "dayGridMonth",
-            locale: frappe.boot.lang,
-            firstDay: 1,
-            headerToolbar: {
-                left: "prev,title,next",
-                center: "",
-                right: "today,dayGridMonth,timeGridWeek,timeGridDay", // Using timeGrid views here
-            },
-            editable: true,
-            droppable: true,
-            selectable: true,
-            selectMirror: true,
-            forceEventDuration: true,
+        // this.cal_options = {
+        //     plugins: frappe.FullCalendar.Plugins,
+        //     initialView: defaults.initialView || "dayGridMonth",
+        //     locale: frappe.boot.lang,
+        //     firstDay: 1,
+        //     headerToolbar: {
+        //         left: "prev,title,next",
+        //         center: "",
+        //         right: "today,dayGridMonth,timeGridWeek,timeGridDay", // Using timeGrid views here
+        //     },
+        //     editable: true,
+        //     droppable: true,
+        //     selectable: true,
+        //     selectMirror: true,
+        //     forceEventDuration: true,
             
-            // --- Crucial FullCalendar Display Options (put back to ensure they are true) ---
-            displayEventTime: true, 
-            displayEventEnd: true,  
-            // --- End Crucial Options ---
+        //     // --- Crucial FullCalendar Display Options (put back to ensure they are true) ---
+        //     displayEventTime: true, 
+        //     displayEventEnd: true,  
+        //     // --- End Crucial Options ---
 
-            weekends: defaults.weekends,
-            nowIndicator: true,
-            themeSystem: null,
+        //     weekends: defaults.weekends,
+        //     nowIndicator: true,
+        //     themeSystem: null,
 
-            // --- FullCalendar Options (dynamically set from Calendar View DocType) ---
-            slotEventOverlap: this.slotEventOverlap,
-            scrollTimeReset: this.scrollTimeReset,
-            slotDuration: this.slotDuration,
-            slotLabelInterval: this.slotLabelInterval,
-            slotMinTime: this.slotMinTime,
-            slotMaxTime: this.slotMaxTime,
-            // --- End FullCalendar Options ---
+        //     // --- FullCalendar Options (dynamically set from Calendar View DocType) ---
+        //     slotEventOverlap: this.slotEventOverlap,
+        //     scrollTimeReset: this.scrollTimeReset,
+        //     slotDuration: this.slotDuration,
+        //     slotLabelInterval: this.slotLabelInterval,
+        //     slotMinTime: this.slotMinTime,
+        //     slotMaxTime: this.slotMaxTime,
+        //     // --- End FullCalendar Options ---
 
-            // --- Conditional scrollTime based on custom_scrolltime check field ---
-            scrollTime: this.enableDynamicScrollTime ? calculatedScrollTime : (this.slotMinTime || "06:00:00"),
-            // --- End Conditional scrollTime ---
+        //     // --- Conditional scrollTime based on custom_scrolltime check field ---
+        //     scrollTime: this.enableDynamicScrollTime ? calculatedScrollTime : (this.slotMinTime || "06:00:00"),
+        //     // --- End Conditional scrollTime ---
 
-            buttonText: {
-                today: __("Today"),
-                month: __("Month"),
-                week: __("Week"),
-                day: __("Day"),
-            },
-            events: function (info, successCallback, failureCallback) {
-                return frappe.call({
-                    method: me.get_events_method || "frappe.desk.calendar.get_events",
-                    type: "GET",
-                    args: me.get_args(info.start, info.end),
-                    callback: function (r) {
-                        var events = r.message || [];
-                        events = me.prepare_events(events);
+        //     buttonText: {
+        //         today: __("Today"),
+        //         month: __("Month"),
+        //         week: __("Week"),
+        //         day: __("Day"),
+        //     },
+        //     events: function (info, successCallback, failureCallback) {
+        //         return frappe.call({
+        //             method: me.get_events_method || "frappe.desk.calendar.get_events",
+        //             type: "GET",
+        //             args: me.get_args(info.start, info.end),
+        //             callback: function (r) {
+        //                 var events = r.message || [];
+        //                 events = me.prepare_events(events);
 
-                        // --- NEW DIAGNOSTIC LOG FOR EVENT DATA (kept for debugging event data if needed) ---
-                        console.groupCollapsed("Prepared Events Data for FullCalendar");
-                        if (events && events.length > 0) {
-                            events.forEach((event, index) => {
-                                console.log(`Event ${event.id || index + 1}:`, {
-                                    start: event.start,
-                                    end: event.end,
-                                    allDay: event.allDay, // This MUST be false/0 for times to show
-                                    title: event.title,
-                                });
-                            });
-                        } else {
-                            console.log("No events fetched or prepared for display.");
-                        }
-                        console.groupEnd();
-                        // --- END DIAGNOSTIC LOG ---
+        //                 // --- NEW DIAGNOSTIC LOG FOR EVENT DATA (kept for debugging event data if needed) ---
+        //                 console.groupCollapsed("Prepared Events Data for FullCalendar");
+        //                 if (events && events.length > 0) {
+        //                     events.forEach((event, index) => {
+        //                         console.log(`Event ${event.id || index + 1}:`, {
+        //                             start: event.start,
+        //                             end: event.end,
+        //                             allDay: event.allDay, // This MUST be false/0 for times to show
+        //                             title: event.title,
+        //                         });
+        //                     });
+        //                 } else {
+        //                     console.log("No events fetched or prepared for display.");
+        //                 }
+        //                 console.groupEnd();
+        //                 // --- END DIAGNOSTIC LOG ---
 
-                        successCallback(events);
-                    },
-                });
-            },
-            eventClick: function (info) {
-                // edit event description or delete
-                var doctype = info.doctype || me.doctype;
-                if (frappe.model.can_read(doctype)) {
-                    frappe.set_route("Form", doctype, info.event.id);
-                }
-            },
-            eventDrop: function (info) {
-                me.update_event(info.event, info.revert);
-            },
-            eventResize: function (info) {
-                me.update_event(info.event, info.revert);
-            },
-            select: function (info) {
-                const seconds = info.end - info.start;
-                const allDay = seconds === 86400000;
+        //                 successCallback(events);
+        //             },
+        //         });
+        //     },
+        //     eventClick: function (info) {
+        //         // edit event description or delete
+        //         var doctype = info.doctype || me.doctype;
+        //         if (frappe.model.can_read(doctype)) {
+        //             frappe.set_route("Form", doctype, info.event.id);
+        //         }
+        //     },
+        //     eventDrop: function (info) {
+        //         me.update_event(info.event, info.revert);
+        //     },
+        //     eventResize: function (info) {
+        //         me.update_event(info.event, info.revert);
+        //     },
+        //     select: function (info) {
+        //         const seconds = info.end - info.start;
+        //         const allDay = seconds === 86400000;
 
-                if (info.view.type === "dayGridMonth" && allDay) {
-                    // detect single day click in month view
-                    return;
-                }
+        //         if (info.view.type === "dayGridMonth" && allDay) {
+        //             // detect single day click in month view
+        //             return;
+        //         }
 
-                var event = frappe.model.get_new_doc(me.doctype);
+        //         var event = frappe.model.get_new_doc(me.doctype);
 
-                event[me.field_map.start] = me.get_system_datetime(info.start);
-                if (me.field_map.end) event[me.field_map.end] = me.get_system_datetime(info.end);
+        //         event[me.field_map.start] = me.get_system_datetime(info.start);
+        //         if (me.field_map.end) event[me.field_map.end] = me.get_system_datetime(info.end);
 
-                if (seconds >= 86400000) {
-                    if (allDay) {
-                        // all-day click
-                        event[me.field_map.allDay] = 1;
-                    }
-                    // incase of all day or multiple day events -1 sec
-                    event[me.field_map.end] = me.get_system_datetime(info.end - 1);
-                }
-                frappe.set_route("Form", me.doctype, event.name);
-            },
-            dateClick: function (info) {
-                if (info.view.type === "dayGridMonth") {
-                    const $date_cell = $(
-                        "td[data-date=" + info.date.toISOString().slice(0, 10) + "]"
-                    );
+        //         if (seconds >= 86400000) {
+        //             if (allDay) {
+        //                 // all-day click
+        //                 event[me.field_map.allDay] = 1;
+        //             }
+        //             // incase of all day or multiple day events -1 sec
+        //             event[me.field_map.end] = me.get_system_datetime(info.end - 1);
+        //         }
+        //         frappe.set_route("Form", me.doctype, event.name);
+        //     },
+        //     dateClick: function (info) {
+        //         if (info.view.type === "dayGridMonth") {
+        //             const $date_cell = $(
+        //                 "td[data-date=" + info.date.toISOString().slice(0, 10) + "]"
+        //             );
 
-                    if ($date_cell.hasClass("date-clicked")) {
-                        me.fullCalendar.changeView("timeGridDay", info.date);
-                        me.$wrapper.find(".date-clicked").removeClass("date-clicked");
+        //             if ($date_cell.hasClass("date-clicked")) {
+        //                 me.fullCalendar.changeView("timeGridDay", info.date);
+        //                 me.$wrapper.find(".date-clicked").removeClass("date-clicked");
 
-                        // update "active view" btn
-                        me.$wrapper.find(".fc-month-button").removeClass("active");
-                        me.$wrapper.find(".fc-agendaDay-button").addClass("active");
-                    }
+        //                 // update "active view" btn
+        //                 me.$wrapper.find(".fc-month-button").removeClass("active");
+        //                 me.$wrapper.find(".fc-agendaDay-button").addClass("active");
+        //             }
 
-                    me.$wrapper.find(".date-clicked").removeClass("date-clicked");
-                    $date_cell.addClass("date-clicked");
+        //             me.$wrapper.find(".date-clicked").removeClass("date-clicked");
+        //             $date_cell.addClass("date-clicked");
 
-                    // explicitly remove the fc primary button styling that is append on view change
-                    // from month -> day
-                    $("#fc-calendar-wrapper")
-                        .find("button.fc-button")
-                        .removeClass("fc-button fc-button-primary fc-button-active")
-                        .addClass("btn btn-default");
-                }
-                return false;
-            },
-        };
+        //             // explicitly remove the fc primary button styling that is append on view change
+        //             // from month -> day
+        //             $("#fc-calendar-wrapper")
+        //                 .find("button.fc-button")
+        //                 .removeClass("fc-button fc-button-primary fc-button-active")
+        //                 .addClass("btn btn-default");
+        //         }
+        //         return false;
+        //     },
+        // };
 
         if (this.options) {
             $.extend(this.cal_options, this.options);

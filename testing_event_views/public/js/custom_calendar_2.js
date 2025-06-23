@@ -53,8 +53,9 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
             return;
         }
 
-        this.load_lib
-            .then(() => this.get_calendar_preferences())
+        // Removed 'this.load_lib' as 'required_libs' is no longer specified.
+        // Assuming FullCalendar is already loaded by Frappe core.
+        this.get_calendar_preferences()
             .then((options) => {
                 this.calendar = new frappe.views.Calendar(options);
             });
@@ -178,10 +179,8 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
         });
     }
 
-    get required_libs() {
-        // Change this line:
-        return "fullcalendar.bundle.js"; // This is the correct bundle name for FullCalendar
-    }
+    // REMOVED: The 'get required_libs()' method that was causing the 404 error.
+    // FullCalendar is expected to be loaded by Frappe's core.
 };
 
 frappe.views.Calendar = class Calendar {

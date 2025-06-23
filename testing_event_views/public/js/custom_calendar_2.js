@@ -47,15 +47,12 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
         });
     }
 
-    // --- FIX START: Reintroduce required_libs to tell Frappe to load FullCalendar ---
     get required_libs() {
-        // These are the exact paths you observed loading in the unmodified version.
         return [
             "assets/frappe/js/lib/fullcalendar/fullcalendar.min.js",
             "assets/frappe/js/lib/fullcalendar/fullcalendar.min.css"
         ];
     }
-    // --- FIX END ---
 
     render() {
         if (this.calendar) {
@@ -63,16 +60,12 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
             return;
         }
 
-        // --- FIX START: Ensure libraries are loaded before initializing Calendar ---
-        // `frappe.require` will load the libraries specified in `required_libs`
-        // and then execute the callback function once they are loaded.
         frappe.require(this.required_libs, () => {
             this.get_calendar_preferences()
                 .then((options) => {
                     this.calendar = new frappe.views.Calendar(options);
                 });
         });
-        // --- FIX END ---
     }
 
     get_calendar_preferences() {
@@ -231,7 +224,11 @@ frappe.views.Calendar = class Calendar {
         );
         this.footnote_area.css({ "border-top": "0px" });
 
-        this.fullCalendar = new frappe.FullCalendar(this.$cal[0], this.cal_options);
+        // --- FIX START: Change FullCalendar instantiation for v5+ ---
+        // `frappe.FullCalendar` is the module, `frappe.FullCalendar.Calendar` is the constructor.
+        this.fullCalendar = new frappe.FullCalendar.Calendar(this.$cal[0], this.cal_options);
+        // --- FIX END ---
+
         this.fullCalendar.render();
 
         this.set_css();
@@ -321,16 +318,15 @@ frappe.views.Calendar = class Calendar {
         const calculatedScrollTime = `${hours}:${minutes}:${seconds}`;
 
         this.cal_options = {
-            // FIX: This line now relies on frappe.FullCalendar being loaded,
-            // which will happen because of `required_libs` in CalendarView.
-            // If `frappe.FullCalendar.Plugins` is still undefined *after* the library loads,
-            // you might need to manually list them as:
-            // plugins: [
-            //     frappe.FullCalendar.DayGrid,
-            //     frappe.FullCalendar.TimeGrid,
-            //     frappe.FullCalendar.Interaction
-            // ],
-            // plugins: frappe.FullCalendar.Plugins, // Keep this as primary attempt
+            // --- FIX START: Correct `plugins` array for FullCalendar v5+ ---
+            // Assuming Frappe makes these plugin constructors available on `frappe.FullCalendar`
+            // Common plugins: DayGrid, TimeGrid, Interaction. Add others if you use them.
+            plugins: [
+                frappe.FullCalendar.DayGrid,
+                frappe.FullCalendar.TimeGrid,
+                frappe.FullCalendar.Interaction
+            ],
+            // --- FIX END ---
             initialView: defaults.initialView || "dayGridMonth",
             locale: frappe.boot.lang,
             firstDay: 1,

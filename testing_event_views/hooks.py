@@ -46,7 +46,7 @@ app_license = "mit"
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
-doctype_calendar_js = {"Event" : "public/js/custom_calendar_2.js"}
+# doctype_calendar_js = {"Event" : "public/js/custom_calendar_2.js"}
 # doctype_calendar_js = {"Event" : "public/js/custom_event_views2.js"}
 
 

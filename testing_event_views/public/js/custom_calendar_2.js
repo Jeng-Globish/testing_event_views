@@ -179,7 +179,8 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
     }
 
     get required_libs() {
-        return "calendar.bundle.js";
+        // Change this line:
+        return "fullcalendar.bundle.js"; // This is the correct bundle name for FullCalendar
     }
 };
 

@@ -71,7 +71,43 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
 
         return new Promise((resolve) => {
             if (calendar_name === "default") {
-                Object.assign(options, frappe.views.calendar[this.doctype]);
+                // --- Start of FIX: Ensure default FullCalendar options are always present ---
+                // This block is crucial for the default calendar view to work,
+                // providing fallback values for FullCalendar properties that
+                // would otherwise be undefined when no custom Calendar View is selected.
+                const defaultDocTypeCalendarSettings = frappe.views.calendar[this.doctype] || {};
+
+                // Define a fallback for essential field_map if not provided by the DocType itself
+                const defaultFieldMap = {
+                    id: "name",
+                    start: "start_date", // Common default for start date field
+                    end: "end_date",     // Common default for end date field
+                    title: "subject",    // Common default for title field
+                    allDay: "all_day",   // Common default for allDay field
+                };
+
+                // Define default values for FullCalendar specific time-slot options
+                const defaultFullCalendarOptions = {
+                    slotEventOverlap: true,
+                    scrollTimeReset: true,
+                    slotDuration: "00:30:00",
+                    slotLabelInterval: "01:00:00",
+                    slotMinTime: "06:00:00",
+                    slotMaxTime: "24:00:00",
+                    enableDynamicScrollTime: false, // Default to not dynamically scroll
+                };
+
+                // Merge the existing DocType calendar settings with the fallback field map
+                // and the default FullCalendar options, and assign them to the options object.
+                Object.assign(options, {
+                    field_map: defaultDocTypeCalendarSettings.field_map || defaultFieldMap,
+                    ...defaultFullCalendarOptions, // Add the FullCalendar default options here
+                    // You can add other global FullCalendar defaults here if needed,
+                    // or ensure they are properly inherited from defaultDocTypeCalendarSettings
+                    // Example: defaultView: defaultDocTypeCalendarSettings.defaultView || "dayGridMonth",
+                }, defaultDocTypeCalendarSettings); // Also merge any other top-level settings
+
+                // --- End of FIX ---
                 resolve(options);
             } else {
                 frappe.model.with_doc("Calendar View", calendar_name, () => {
@@ -86,7 +122,8 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
                         return;
                     }
 
-                    // --- Start of Field Fetching and Conversion ---
+                    // --- Start of Field Fetching and Conversion (for custom views) ---
+                    // These fields are specific to custom Calendar View DocTypes
                     
                     // custom_sloteventoverlap (Check field)
                     let customSlotEventOverlapValue = false;
@@ -126,7 +163,7 @@ frappe.views.CalendarView = class CalendarView extends frappe.views.ListView {
                             title: doc.subject_field,
                             allDay: doc.all_day ? 1 : 0,
                         },
-                        // Assign all FullCalendar options
+                        // Assign all FullCalendar options coming from the Calendar View DocType
                         slotEventOverlap: customSlotEventOverlapValue,
                         scrollTimeReset: scrollTimeResetValue,
                         slotDuration: slotDurationValue,
@@ -150,7 +187,7 @@ frappe.views.Calendar = class Calendar {
     constructor(options) {
         $.extend(this, options);
 
-        // console.log removed from constructor
+        // console.log("Calendar options received:", options); // Re-added for debugging
 
         this.field_map = this.field_map || {
             id: "name",
@@ -308,7 +345,7 @@ frappe.views.Calendar = class Calendar {
         seconds = String(seconds).padStart(2, '0');
         const calculatedScrollTime = `${hours}:${minutes}:${seconds}`;
 
-        // console.log removed from here
+        // console.log("Calculated scrollTime:", calculatedScrollTime); // Re-added for debugging
 
         this.cal_options = {
             plugins: frappe.FullCalendar.Plugins,
@@ -336,6 +373,9 @@ frappe.views.Calendar = class Calendar {
             themeSystem: null,
 
             // --- FullCalendar Options (dynamically set from Calendar View DocType) ---
+            // These properties are set on the `this` context via $.extend in the constructor,
+            // which gets its options from `get_calendar_preferences`.
+            // The default values are now provided in `get_calendar_preferences` for the "default" case.
             slotEventOverlap: this.slotEventOverlap,
             scrollTimeReset: this.scrollTimeReset,
             slotDuration: this.slotDuration,
@@ -345,6 +385,8 @@ frappe.views.Calendar = class Calendar {
             // --- End FullCalendar Options ---
 
             // --- Conditional scrollTime based on custom_scrolltime check field ---
+            // This now correctly uses the `this.slotMinTime` which will be populated
+            // either by a custom doc or the new default values.
             scrollTime: this.enableDynamicScrollTime ? calculatedScrollTime : (this.slotMinTime || "06:00:00"),
             // --- End Conditional scrollTime ---
 
@@ -484,8 +526,8 @@ frappe.views.Calendar = class Calendar {
                 d[target] = d[source];
             });
 
-            // console.log removed from here
-            // console.log removed from here
+            // console.log("Event after field_map application:", d); // Re-added for debugging
+            // console.log("Field map used for event:", me.field_map); // Re-added for debugging
 
             if (typeof d.allDay === "undefined") {
                 d.allDay = me.field_map.allDay;
@@ -500,7 +542,7 @@ frappe.views.Calendar = class Calendar {
             }
 
             // Check state AFTER timezone conversion
-            // console.log removed from here
+            // console.log("Event after timezone conversion:", d); // Re-added for debugging
 
             // show event on single day if start or end date is invalid
             if (!frappe.datetime.validate(d.start) && d.end) {

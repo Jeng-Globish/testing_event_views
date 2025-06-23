@@ -26,6 +26,7 @@ frappe.views.calendar["Event"] = {
 		slotDuration: "00:10:00",
 		slotLabelInterval: "00:30:00",
 		displayEventEnd: true,
+		slotEventOverlap: false,
 	},
 	get_events_method: "frappe.desk.doctype.event.event.get_events",
 };

@@ -221,21 +221,21 @@ frappe.views.Calendar = class Calendar {
         });
     }
 
-    // make() {
-    //     this.$wrapper = this.parent;
-    //     this.$cal = $("<div id='fc-calendar-wrapper'>").appendTo(this.$wrapper);
-    //     this.footnote_area = frappe.utils.set_footnote(
-    //         this.footnote_area,
-    //         this.$wrapper,
-    //         __("Select or drag across time slots to create a new event.")
-    //     );
-    //     this.footnote_area.css({ "border-top": "0px" });
+    make() {
+        this.$wrapper = this.parent;
+        this.$cal = $("<div id='fc-calendar-wrapper'>").appendTo(this.$wrapper);
+        this.footnote_area = frappe.utils.set_footnote(
+            this.footnote_area,
+            this.$wrapper,
+            __("Select or drag across time slots to create a new event.")
+        );
+        this.footnote_area.css({ "border-top": "0px" });
 
-    //     this.fullCalendar = new frappe.FullCalendar(this.$cal[0], this.cal_options);
-    //     this.fullCalendar.render();
+        this.fullCalendar = new frappe.FullCalendar(this.$cal[0], this.cal_options);
+        this.fullCalendar.render();
 
-    //     this.set_css();
-    // }
+        this.set_css();
+    }
     setup_view_mode_button(defaults) {
         var me = this;
         $(me.footnote_area).find(".btn-weekend").detach();

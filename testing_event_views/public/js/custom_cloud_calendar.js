@@ -352,17 +352,18 @@ frappe.views.Calendar = class Calendar {
             weekends: defaults.weekends,
             nowIndicator: true,
             slotMinTime: "11:00:00",
+            slotMaxTime: "11:00:00",
             
-            // --- FullCalendar Options (dynamically set from Calendar View DocType in get_calendar_preferences) ---
-            slotDuration: this.slotDuration,
-            slotLabelInterval: this.slotLabelInterval,
+            // // --- FullCalendar Options (dynamically set from Calendar View DocType in get_calendar_preferences) ---
+            // slotDuration: this.slotDuration,
+            // slotLabelInterval: this.slotLabelInterval,
             // slotMinTime: this.slotMinTime,
-            slotMaxTime: this.slotMaxTime,
-            slotEventOverlap: this.slotEventOverlap, // Use the value fetched from DocType
-            // For older FullCalendar versions, 'scrollTimeReset' is not a direct option.
-            // 'scrollTime' controls the initial scroll position.
-            scrollTime: this.enableDynamicScrollTime ? calculatedScrollTime : (this.slotMinTime || "06:00:00"),
-            // --- End FullCalendar Options ---
+            // slotMaxTime: this.slotMaxTime,
+            // slotEventOverlap: this.slotEventOverlap, // Use the value fetched from DocType
+            // // For older FullCalendar versions, 'scrollTimeReset' is not a direct option.
+            // // 'scrollTime' controls the initial scroll position.
+            // scrollTime: this.enableDynamicScrollTime ? calculatedScrollTime : (this.slotMinTime || "06:00:00"),
+            // // --- End FullCalendar Options ---
 
             buttonText: {
                 today: __("Today"),

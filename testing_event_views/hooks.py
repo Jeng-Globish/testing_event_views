@@ -48,6 +48,7 @@ app_license = "mit"
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"Event" : "public/js/custom_calendar_2.js"}
 # doctype_calendar_js = {"Event" : "public/js/custom_event_views2.js"}
+doctype_calendar_js = {"Event" : "public/js/custom_cloud_calendar.js"}
 
 
 # Svg Icons

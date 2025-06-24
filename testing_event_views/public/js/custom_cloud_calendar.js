@@ -268,8 +268,8 @@ frappe.views.Calendar = class Calendar {
 			nowIndicator: true,
             slotDuration: "00:10:00",
             slotLabelInterval:"00:30:00",
-            slotMinTime: "06:00:00",
-            slotMaxTime: "22:00:00",
+            minTime: "06:00:00",
+            maxTime: "22:00:00",
             slotEventOverlap: false,
 			buttonText: {
 				today: __("Today"),

@@ -264,6 +264,7 @@ frappe.views.Calendar = class Calendar {
 			defaultView: defaults.defaultView,
 			weekends: defaults.weekends,
 			nowIndicator: true,
+            slotEventOverlap: false,
 			buttonText: {
 				today: __("Today"),
 				month: __("Month"),
